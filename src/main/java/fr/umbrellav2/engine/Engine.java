@@ -1,5 +1,7 @@
 package fr.umbrellav2.engine;
 
+import org.jetbrains.annotations.NotNull;
+
 public class Engine implements Runnable {
 
     private int fps;
@@ -62,7 +64,6 @@ public class Engine implements Runnable {
                 tps = 0;
             }
         }
-
     }
 
     protected void cleanup() {
@@ -70,11 +71,12 @@ public class Engine implements Runnable {
     }
 
     protected void update() {
+        gameLogic.update();
         tps++;
     }
 
     protected void render() {
-        gameLogic.render(window);
+        gameLogic.render();
         window.update();
         fps++;
     }

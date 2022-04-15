@@ -90,9 +90,10 @@ public class Window {
 
         GL.createCapabilities();
 
-        GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
 
     }
 

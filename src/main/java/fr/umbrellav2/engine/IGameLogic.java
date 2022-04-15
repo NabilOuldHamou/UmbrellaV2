@@ -1,5 +1,7 @@
 package fr.umbrellav2.engine;
 
+import org.jetbrains.annotations.NotNull;
+
 public interface IGameLogic {
 
     void init(Window window) throws Exception;
@@ -8,7 +10,7 @@ public interface IGameLogic {
 
     void update(); // TODO add the input as well
 
-    void render(Window window);
+    void render();
 
     void cleanup();
 

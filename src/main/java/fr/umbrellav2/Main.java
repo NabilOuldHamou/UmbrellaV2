@@ -1,7 +1,7 @@
 package fr.umbrellav2;
 
 import fr.umbrellav2.engine.Engine;
-import fr.umbrellav2.engine.Game;
+import fr.umbrellav2.game.Game;
 import fr.umbrellav2.engine.IGameLogic;
 
 public class Main {
@@ -10,7 +10,7 @@ public class Main {
         try {
             IGameLogic game = new Game();
 
-            Engine engine = new Engine("Game", 1280, 720, true, game);
+            Engine engine = new Engine("Game", 1280, 720, false, game);
 
             engine.run();
         } catch (Exception e) {
