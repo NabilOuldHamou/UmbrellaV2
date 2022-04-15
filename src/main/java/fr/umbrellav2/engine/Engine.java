@@ -54,6 +54,7 @@ public class Engine implements Runnable {
             render();
 
             // TODO only print when debug mode is on.
+
             if(System.currentTimeMillis() - timer > 1000) {
                 timer += 1000;
                 System.out.println("FPS: " + fps);

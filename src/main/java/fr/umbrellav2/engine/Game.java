@@ -16,6 +16,7 @@ public class Game implements IGameLogic {
     @Override
     public void input(Window window) {
         // TODO handling the updates.
+
     }
 
     @Override
