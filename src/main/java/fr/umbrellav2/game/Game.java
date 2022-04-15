@@ -5,6 +5,7 @@ import fr.umbrellav2.engine.IGameLogic;
 import fr.umbrellav2.engine.Window;
 import fr.umbrellav2.engine.components.SpriteRenderer;
 import fr.umbrellav2.engine.graphics.Camera;
+import fr.umbrellav2.engine.graphics.Texture;
 import fr.umbrellav2.engine.graphics.renderer.Renderer;
 import fr.umbrellav2.engine.utils.Transform;
 import org.joml.Vector2f;
@@ -33,7 +34,7 @@ public class Game implements IGameLogic {
         this.window = window;
 
         go = new GameObject(new Transform(new Vector2f(200, 200), new Vector2f(100, 100)));
-        go.addComponent(new SpriteRenderer(new Vector4f(300, 0, 0, 1)));
+        go.addComponent(new SpriteRenderer(new Texture("textures/grassblock.png")));
 
         go.init();
 

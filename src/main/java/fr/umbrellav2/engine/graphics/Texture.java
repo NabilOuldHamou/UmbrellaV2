@@ -1,42 +1,21 @@
 package fr.umbrellav2.engine.graphics;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 public class Texture {
 
     private final int textureId;
 
-    private int vaoId, vboId, eboId;
-
     private final int width;
     private final int height;
 
-
-    // Vertex array for square
-    private float[] vertexArray = {
-            0.5f, -0.5f, 0.0f,        1.0f, 0.0f, 0.0f, 0.0f,   1, 0,
-            -0.5f, 0.5f, 0.0f,        1.0f, 0.0f, 0.0f, 0.0f,   0, 1,
-            0.5f, 0.5f, 0.0f,         1.0f, 0.0f, 0.0f, 0.0f,   1, 1,
-            -0.5f, -0.5f, 0.0f,       1.0f, 0.0f, 0.0f, 0.0f,   0, 0,
-    };
-
-    private int[] elementArray = {
-            2, 1, 0,
-            0, 1, 3,
-    };
-
-
-    public Texture(String fileName) throws Exception {
+    public Texture(String file) {
         ByteBuffer buffer;
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -44,9 +23,11 @@ public class Texture {
             IntBuffer h = stack.mallocInt(1);
             IntBuffer channels = stack.mallocInt(1);
 
-            buffer = STBImage.stbi_load(fileName, w, h, channels, 4);
+            STBImage.stbi_set_flip_vertically_on_load(true);
+            buffer = STBImage.stbi_load(file, w, h, channels, 4);
             if (buffer == null) {
-                throw new Exception("Image file (" + fileName + ") not loaded:" + STBImage.stbi_failure_reason());
+                throw new RuntimeException("Could not load image: " + file + ". Failure reason: " +
+                        STBImage.stbi_failure_reason());
             }
 
             width = w.get();
@@ -74,53 +55,6 @@ public class Texture {
         return textureId;
     }
 
-    private void createVertices() {
-        vaoId = GL30.glGenVertexArrays();
-        GL30.glBindVertexArray(vaoId);
-
-        FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(vertexArray.length);
-        vertexBuffer.put(vertexArray).flip();
-
-        vboId = GL30.glGenBuffers();
-        GL30.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
-        GL30.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
-
-        IntBuffer elementBuffer = BufferUtils.createIntBuffer(elementArray.length);
-        elementBuffer.put(elementArray).flip();
-
-        eboId = GL30.glGenBuffers();
-        GL30.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, eboId);
-        GL30.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, elementBuffer, GL15.GL_STATIC_DRAW);
-
-        // POINTERS TIME
-        int positionsSize = 3;
-        int colorSize = 4;
-        int texCoordSize = 2;
-        int vertexSizeBytes = (positionsSize + colorSize) * Float.BYTES;
-
-        // POSITIONS
-        GL30.glVertexAttribPointer(0, positionsSize, GL11.GL_FLOAT, false, vertexSizeBytes, 0);
-        GL30.glEnableVertexAttribArray(0);
-
-        // TEXTURE COORDS
-        GL30.glVertexAttribPointer(1, texCoordSize, GL11.GL_FLOAT, false, vertexSizeBytes,
-                (positionsSize + colorSize) * Float.BYTES);
-        GL30.glEnableVertexAttribArray(1);
-    }
-
-    public void render() {
-        GL30.glActiveTexture(GL13.GL_TEXTURE0);
-
-        GL30.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-
-        GL30.glBindVertexArray(vaoId);
-
-        GL30.glDrawElements(GL11.GL_TRIANGLES, elementArray.length, GL11.GL_UNSIGNED_INT, 2);
-
-        GL30.glBindVertexArray(0);
-        GL30.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-    }
-
     public int getWidth() {
         return width;
     }
@@ -144,5 +78,4 @@ public class Texture {
     public void cleanup() {
         GL30.glDeleteTextures(textureId);
     }
-
 }

@@ -1,10 +1,15 @@
 package fr.umbrellav2.engine.graphics.renderer;
 
 import fr.umbrellav2.engine.components.SpriteRenderer;
+import fr.umbrellav2.engine.graphics.Texture;
 import fr.umbrellav2.engine.utils.Utils;
 import fr.umbrellav2.game.Game;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BatchRenderer {
 
@@ -14,13 +19,22 @@ public class BatchRenderer {
     private final int POS_OFFSET = 0;
     private final int COLOR_OFFSET = POS_OFFSET + POS_SIZE * Float.BYTES;
 
-    private final int VERTEX_SIZE = 6;
+    private final int TEXT_COORDS_SIZE = 2;
+    private final int TEXT_ID_SIZE = 1;
+
+    private final int TEXT_COORDS_OFFSET = COLOR_OFFSET + COLOR_SIZE * Float.BYTES;
+    private final int TEXT_ID_OFFSET = TEXT_COORDS_OFFSET + TEXT_COORDS_SIZE * Float.BYTES;
+
+    private final int VERTEX_SIZE = 9;
     private final int VERTEX_SIZE_BYTES = VERTEX_SIZE * Float.BYTES;
 
     private SpriteRenderer[] sprites;
     private int numSprites;
     private boolean hasRoom;
     private float[] vertices;
+    private List<Texture> textures;
+    private int[] textureSlots = {0, 1, 2, 3, 4, 5, 6, 7};
+
 
     private int vaoId, vboId;
     private int maxBatchSize;
@@ -33,6 +47,7 @@ public class BatchRenderer {
         shader.link();
         shader.createUniform("projection");
         shader.createUniform("view");
+        shader.createUniform("textures");
 
         this.sprites = new SpriteRenderer[maxBatchSize];
         this.maxBatchSize = maxBatchSize;
@@ -41,6 +56,7 @@ public class BatchRenderer {
 
         this.numSprites = 0;
         this.hasRoom = true;
+        this.textures = new ArrayList<>();
     }
 
     public void init() {
@@ -61,6 +77,12 @@ public class BatchRenderer {
 
         GL30.glVertexAttribPointer(1, COLOR_SIZE, GL11.GL_FLOAT, false, VERTEX_SIZE_BYTES, COLOR_OFFSET);
         GL30.glEnableVertexAttribArray(1);
+
+        GL30.glVertexAttribPointer(2, TEXT_COORDS_SIZE, GL11.GL_FLOAT, false, VERTEX_SIZE_BYTES, TEXT_COORDS_OFFSET);
+        GL30.glEnableVertexAttribArray(2);
+
+        GL30.glVertexAttribPointer(3, TEXT_ID_SIZE, GL11.GL_FLOAT, false, VERTEX_SIZE_BYTES, TEXT_ID_OFFSET);
+        GL30.glEnableVertexAttribArray(3);
     }
 
     public void render() {
@@ -70,6 +92,11 @@ public class BatchRenderer {
         shader.bind();
         shader.setUniform("projection", Game.getInstance().getCamera().getProjectionMatrix());
         shader.setUniform("view", Game.getInstance().getCamera().getViewMatrix());
+        for (int i = 0; i < textures.size(); i++) {
+            GL30.glActiveTexture(GL13.GL_TEXTURE0 + i + 1);
+            textures.get(i).bind();
+        }
+        shader.setUniform("textures", textureSlots);
 
         GL30.glBindVertexArray(vaoId);
         GL30.glEnableVertexAttribArray(0);
@@ -81,6 +108,10 @@ public class BatchRenderer {
         GL30.glDisableVertexAttribArray(1);
         GL30.glBindVertexArray(0);
 
+        for (int i = 0; i < textures.size(); i++) {
+            GL30.glActiveTexture(GL13.GL_TEXTURE0 + i + 1);
+            textures.get(i).unbind();
+        }
         shader.unbind();
     }
 
@@ -88,6 +119,12 @@ public class BatchRenderer {
         int index = this.numSprites;
         this.sprites[index] = spriteRenderer;
         this.numSprites++;
+
+        if (spriteRenderer.getTexture() != null) {
+            if (!textures.contains(spriteRenderer.getTexture())) {
+                textures.add(spriteRenderer.getTexture());
+            }
+        }
 
         loadVertexProperties(index);
 
@@ -102,6 +139,17 @@ public class BatchRenderer {
         int offset = index * 4 * VERTEX_SIZE;
 
         Vector4f color = spriteRenderer.getColor();
+        Vector2f[] texCoords = spriteRenderer.getTextureCoords();
+
+        int textId = 0;
+        if (spriteRenderer.getTexture() != null) {
+            for (int i = 0; i < textures.size(); i++) {
+                if (textures.get(i).equals(spriteRenderer.getTexture())) {
+                    textId = i + 1;
+                    break;
+                }
+            }
+        }
 
         float xAdd = 1.0f;
         float yAdd = 1.0f;
@@ -129,6 +177,13 @@ public class BatchRenderer {
             vertices[offset + 3] = color.y;
             vertices[offset + 4] = color.z;
             vertices[offset + 5] = color.w;
+
+            //TEXT COORDS
+            vertices[offset + 6] = texCoords[i].x;
+            vertices[offset + 7] = texCoords[i].y;
+
+            //TEXT ID
+            vertices[offset + 8] = textId;
 
             offset += VERTEX_SIZE;
         }
